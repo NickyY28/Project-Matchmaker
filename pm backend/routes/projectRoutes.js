@@ -8,7 +8,7 @@ const router = express.Router();
 // Submit a new project
 router.post('/submit', authMiddleware, async (req, res) => {
   const { name, description, techStack } = req.body;
-  
+
   if (!name || !description || !techStack) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -28,18 +28,28 @@ router.post('/submit', authMiddleware, async (req, res) => {
   }
 });
 
+// Get logged-in user's projects
+router.get('/my', authMiddleware, async (req, res) => {
+  try {
+    const projects = await Project.find({ owner: req.user._id }).sort({ createdAt: -1 });
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching your projects" });
+  }
+});
+
 // Get all projects (to display on frontend)
 router.get('/all', async (req, res) => {
-    try {
-      const projects = await Project.find()
-        .populate('owner', 'username avatarUrl')  // Populate the 'owner' field with username and avatar
-        .sort({ createdAt: -1 });
-  
-      res.status(200).json(projects);
-    } catch (err) {
-      console.error("Error fetching projects:", err);
-      res.status(500).json({ error: "Failed to fetch projects" });
-    }
-  });
+  try {
+    const projects = await Project.find()
+      .populate('owner', 'username avatarUrl')  // Populate the 'owner' field with username and avatar
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(projects);
+  } catch (err) {
+    console.error("Error fetching projects:", err);
+    res.status(500).json({ error: "Failed to fetch projects" });
+  }
+});
 
 export default router;
